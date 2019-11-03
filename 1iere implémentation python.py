@@ -1,16 +1,19 @@
 
-
+import itertools
 
 #############################################################
-class Board :
+class Board:
     def __init__(self) :
         self._cases = [[0 for col in range(0,8)] for row in range(0,8)]
         
         
     @property
     def cases(self) :
-        return self._cases    
+        return self._cases
     
+    #return who's claimed the cell
+    def get_pos(self, pos_x, pos_y):
+        return self.cases[pos_x][pos_y]
     
     def draw_cell(self, pos, player_value) :
         x,y = pos
@@ -20,7 +23,7 @@ class Board :
    
      
 #############################################################     
-class User :
+class User:
     def __init__(self, name, password) :
         self._name = name
         self._pasword = password
@@ -43,11 +46,9 @@ class User :
 #############################################################
 class Player (User):
     def __init__(self, name, password) :
-        super.__init__(name, password)
+        User.__init__(self,name, password)
         self._position = []
-        self._is_human
-        self._game
-    
+        self._game = None
     
     @property
     def position(self):
@@ -63,7 +64,6 @@ class Player (User):
     def game(self):
         return self._game
     
-    
     @game.setter
     def game(self, new_game):
         self._game = new_game
@@ -71,41 +71,46 @@ class Player (User):
         
     def check_move(self, direction):
         pos_X, pos_Y = self.position
-        if direction == 1:
+        
+        if direction == 1:      #go left
             X_offset = 0
             Y_offset = -1
-        elif direction == 2:
+        elif direction == 2:    #go right
             X_offset = 0
             Y_offset = 1
-        elif direction == 3:
+        elif direction == 3:    #go up
             X_offset = -1
             Y_offset = 0
-        else :
+        else :                  #go down
             X_offset = 1
             Y_offset = 0
             
+            #check if position is in array's boundaries
         if((pos_X+X_offset >= 0 and pos_X+X_offset <= 7) and (pos_Y+Y_offset >=0 and pos_Y+Y_offset <= 7)):
-            return (self.game.board.get_pos(pos_X+X_offset ,pos_Y+Y_offset) != self.game.turn and (self.game.board.get_pos(pos_X+X_offset ,pos_Y+Y_offset) != 0 ))
+                    #check if the cell is already claimed
+            return (self.game.board().get_pos(pos_X+X_offset ,pos_Y+Y_offset) != self.game.turn and (self.game.board().get_pos(pos_X+X_offset ,pos_Y+Y_offset) == 0 ))
         return False
     
     
     def move(self, direction):
         pos_X, pos_Y = self.position
+        
         if(self.check_move(direction)) :
+            
             if direction == 1:
                 self.position = (pos_X, pos_Y-1)
-                self.game.histo_pos((pos_X, pos_Y-1))
+                self.game.histo_pos = (pos_X, pos_Y-1)
             elif direction == 2:
                 self.position = (pos_X, pos_Y+1)
-                self.game.histo_pos((pos_X, pos_Y+1))
+                self.game.histo_pos = (pos_X, pos_Y+1)
             elif direction == 3:
                 self.position = (pos_X-1, pos_Y)
-                self.game.histo_pos((pos_X-1, pos_Y))
+                self.game.histo_pos = (pos_X-1, pos_Y)
             else:
                 self.position = (pos_X+1, pos_Y)
-                self.game.histo_pos((pos_X+1, pos_Y))
-            self.game.board.draw_cell(self.position, self.game.turn)
-            self.game.next_turn()
+                self.game.histo_pos = (pos_X+1, pos_Y)
+            
+            self.game.board().draw_cell(self.position, self.game.turn)
         else:
             print("Apprend à jouer")
 #############################################################
@@ -119,8 +124,8 @@ class Game :
         self._players = [player1, player2]
         self._histo_pos = [[(0,0)]],[[(7,7)]]
         self._turn = [-1,1]
-        self._players[0].assign_game(self)
-        self._players[1].assign_game(self)
+        self._players[0].game = self
+        self._players[1].game = self
         self._state = "Not Started"
     
     
@@ -129,12 +134,12 @@ class Game :
         return self._turn[0]
     
     
-    @property
+    #@property
     def board(self):
         return self._board
     
     
-    @property
+    #@property
     def player(self, i):
         return self._players[i]
     
@@ -159,21 +164,25 @@ class Game :
     
     def next_turn(self):
         self._turn.reverse()
-        self.player.reverse()
         
     def starting(self):
         self._players[0].position = (0,0)
         self._players[1].position = (7,7)
         self.state = "Started"
+        
+        self.board().draw_cell(self._players[0].position, self._turn[0])
+        self.board().draw_cell(self._players[1].position, self._turn[1])
         #Draw board & players (Django)
     
     def check_state(self):
-        if not(0 in self.board.cases):
+        any(itertools.chain(*ar))
+        if all(list(itertools.chain(*self.board().cases))):
             self.state = "Over"
             #Check winner & Count points
             #Add victory to winner user
             #Add played game to both users
-            
+        
+    
             
     
 #############################################################
@@ -189,8 +198,28 @@ p2 = Player("p2","pass2")
 
 game = Game(p1, p2)
 
+game.starting()
 
+board_print = ""
+for i in range(0,8):
+    for j in range(0,8):
+        board_print += str(game.board().get_pos(i,j)) + " "
+    board_print += "\n"
+print(board_print)
 
-
-
-
+while(game.state != "Over"):
+    for p in range(0,1):
+        pl = "p" + str(p+1) + " >"
+        action = int(input(pl))
+        game.player(p).move(action)
+        game.next_turn()
+        game.check_state()
+        
+        board_print = ""
+        for i in range(0,8):
+            for j in range(0,8):
+                board_print += str(game.board().get_pos(i,j)) + " "
+            board_print += "\n"
+        print(board_print)
+        
+    
