@@ -1,0 +1,57 @@
+<head>
+    <style>
+        td {
+            background-color: antiquewhite;
+            padding:50px;
+        }
+    </style>
+
+    <script>
+        window.onload = function () {
+            let pos = "";
+            let js_board = JSON.parse("{{board}}");
+            for (line in js_board) {
+                for (cell in js_board[line]){
+                    pos = (parseInt((parseInt(line)+1))) + "," + (parseInt(parseInt(cell)+1));
+                    if (js_board[line][cell] == -1){
+                        document.getElementById(pos).style.backgroundColor = "darkred";
+                    }
+                    else if (js_board[line][cell] == 1) {
+                        document.getElementById(pos).style.backgroundColor = "blue";
+                    }
+                    
+                }
+            }
+
+            let pos1 = JSON.parse("{{p1}}");
+            let pos2 = JSON.parse("{{p2}}");
+
+            pos1[0] ++;
+            pos1[1] ++;
+            
+            pos2[0] ++;
+            pos2[1] ++;
+
+            document.getElementById(pos1[0] + "," + pos1[1]).style.backgroundColor = "red"
+            document.getElementById(pos2[0] + "," + pos2[1]).style.backgroundColor = "lightblue"
+
+            let status = JSON.stringify("{{status}}");
+            if (status.localeCompare("Over") == 0){
+                alert("partie terminée");
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <table>
+        {% for i in size_matrix %}
+        <tr>
+            {% for j in size_matrix %}
+                <td id='{{i}},{{j}}'>
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</body>
